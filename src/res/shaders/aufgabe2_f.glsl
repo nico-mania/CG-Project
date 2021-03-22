@@ -1,10 +1,7 @@
 #version 330
-
-vec2 u_resolution;
-
+in vec3 vcolor;
 out vec3 pixelFarbe;
 
-void main(){
-
-
+void main () {
+    pixelFarbe = vcolor;
 }
