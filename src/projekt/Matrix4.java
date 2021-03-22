@@ -58,10 +58,10 @@ public class Matrix4 {
 	public Matrix4 translate(float x, float y, float z) {
 		// TODO Verschiebung um x,y,z zu this hinzufügen
 		float[][] trans = new float[][] {
-				{1, 0, 0, 0}, 	//Spalte1
-				{0, 1, 0, 0}, 	//Spalte2
-				{0, 0, 1, 0}, 	//Spalte3
-				{x, y, z, 1} 	//Spalte4
+				{1, 0, 0, x}, 	//Spalte1
+				{0, 1, 0, y}, 	//Spalte2
+				{0, 0, 1, z}, 	//Spalte3
+				{0, 0, 0, 1} 	//Spalte4
 		};
 		//Erstelle neues Matrixobjekt für multiply methode
 		Matrix4 transmat = new Matrix4();
@@ -103,56 +103,51 @@ public class Matrix4 {
 	public Matrix4 rotateX(float angle) {
 		// TODO Rotation um X-Achse zu this hinzuf�gen
 		double rad = Math.toRadians(angle);
-		//Erstelle Rotationsmatrix
-		float[][] rotx = new float[][] {
-				{1, 0, 0, 0}, 	//Spalte1
-				{0, (float) Math.cos(rad), (float) Math.sin(rad), 0}, 	//Spalte2
-				{0, -(float) Math.sin(rad), (float) Math.cos(rad), 0}, 	//Spalte3
-				{0, 0, 0, 1} 	//Spalte4
-		};
+		//Rotationsmatrix
 		Matrix4 rotmat = new Matrix4();
-		rotmat.mat4 = rotx;
-
+		rotmat.mat4[0][0] = 1;
+		rotmat.mat4[1][1] = (float) Math.cos(rad);
+		rotmat.mat4[1][2] = (float) Math.sin(rad);
+		rotmat.mat4[2][1] = (float)-Math.sin(rad);
+		rotmat.mat4[2][2] = (float) Math.cos(rad);
+		rotmat.mat4[3][3] = 1;
 		return multiply(rotmat);
 	}
 
 	public Matrix4 rotateY(float angle) {
 		// TODO Rotation um Y-Achse zu this hinzuf�gen
 		double rad = Math.toRadians(angle);
-		//Erstelle Rotationsmatrix
-		float[][] roty = new float[][] {
-				{(float) Math.cos(rad), 0, (float) Math.sin(rad), 0}, 	//Spalte1
-				{0, 1, 0, 0}, 	//Spalte2
-				{-(float) Math.sin(rad), 0, (float) Math.cos(rad), 0}, 	//Spalte3
-				{0, 0, 0, 1} 	//Spalte4
-		};
+		//Rotationsmatrix
 		Matrix4 rotmat = new Matrix4();
-		rotmat.mat4 = roty;
-
+		rotmat.mat4[0][0] = (float) Math.cos(rad);
+		rotmat.mat4[0][2] = (float) Math.sin(rad);
+		rotmat.mat4[1][1] = 1;
+		rotmat.mat4[2][0] = (float)-Math.sin(rad);
+		rotmat.mat4[2][2] = (float) Math.cos(rad);
+		rotmat.mat4[3][3] = 1;
 		return multiply(rotmat);
 	}
 
 	public Matrix4 rotateZ(float angle) {
 		// TODO Rotation um Z-Achse zu this hinzuf�gen
 		double rad = Math.toRadians(angle);
-		//Andere Schreibweise (performanter und kürzer)
-		//nur winkel nötig da Einheitsmatrix eh initialisiert
+		//Rotationsmatrix
 		Matrix4 rotmat = new Matrix4();
 		rotmat.mat4[0][0] = (float) Math.cos(rad);
-		rotmat.mat4[0][1] = (float) Math.sin(rad);
-		rotmat.mat4[1][0] = -(float) Math.sin(rad);
+		rotmat.mat4[0][1] = -(float) Math.sin(rad);
+		rotmat.mat4[1][0] = (float) Math.sin(rad);
 		rotmat.mat4[1][1] = (float) Math.cos(rad);
+		rotmat.mat4[2][2] = 1;
+		rotmat.mat4[3][3] = 1;
 		return multiply(rotmat);
 	}
 
 	public float[] getValuesAsArray() {
 		// TODO hier Werte in einem Float-Array mit 16 Elementen (spaltenweise gefüllt) herausgeben
 		float[] values = new float [16];
-		int k = 0;
-		for(int i = 0; i < 4; i++) {
-			for(int j = 0; j < 4; j++) {
-				values[k] = mat4[i][j];
-				k++;
+		for(int i = 0; i < mat4.length; i++) {
+			for(int j = 0; j < mat4.length; j++) {
+				values[i*4+j] = mat4[i][j];
 			}
 		}
 
