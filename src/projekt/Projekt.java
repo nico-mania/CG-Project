@@ -2,18 +2,24 @@ package projekt;
 
 import static org.lwjgl.opengl.GL30.*;
 
-import ab3.Matrix4;
+
 import lenz.opengl.AbstractOpenGLBase;
 import lenz.opengl.ShaderProgram;
 import lenz.opengl.Texture;
 
 public class Projekt extends AbstractOpenGLBase {
 
-	private Matrix4 transformationMatrix = new Matrix4();
-	private Matrix4 projectionMatrix2 = new Matrix4(1, 100);
+	Matrix4 mediumMatrix = new Matrix4();
+	Matrix4 bigMatrix = new Matrix4();
+	Matrix4 smallMatrix = new Matrix4();
+	Matrix4 cubeMatrix = new Matrix4();
+	Matrix4 gemMatrix = new Matrix4();
+	Matrix4 projectionMatrix;
 	private ShaderProgram shaderProgram;
 	private float angle;
 	private float[] pyramid;
+	private float[] cube;
+	private float[] gem;
 	private float[] triangle;
 	private float[] uvkoordiaten;
 	private float[] uvkoordinatenCube;
@@ -24,13 +30,15 @@ public class Projekt extends AbstractOpenGLBase {
 	private Texture tex1;
 	private Texture tex2;
 	private int textureIdCube;
-	private int vaoId2;
+
 	private int textureIDPyramid;
 	private int textureIDPyramid2;
 	private int vaoId1;
-	private Matrix4 rotmat = new Matrix4();
-	private Matrix4 rotmat2 = new Matrix4();
-	private Matrix4 persmat = new Matrix4();
+	private int vaoId2;
+	private int vaoId3;
+
+	private float[] cubeVertices = Coordinates.getCubeVertices();
+	private float[] tVertices = Coordinates.getSphereVertices();
 
 	public static void main(String[] args) {
 		new Projekt().start("CG Projekt", 700, 700);
@@ -43,17 +51,29 @@ public class Projekt extends AbstractOpenGLBase {
 
 		createArrays();
 		initializePyramid();
+		initializeGem();
+//		makeTetra();
+		initializeCube();
 
-		rotmat = new Matrix4();
-		rotmat2 = new Matrix4();
-		persmat = new Matrix4(1f, 100f);
-		// Matrix an Shader �bertragen (muss nur einmal übertragen werden nicht die ganze Zeit)
-		int persloc = glGetUniformLocation(shaderProgram.getId(), "persmat");
-		glUniformMatrix4fv(persloc, false, persmat.getValuesAsArray());
+		 //Camera
+		// Matrix an Shader übertragen (muss nur einmal übertragen werden nicht die ganze Zeit)
+
 
 		glEnable(GL_DEPTH_TEST); // z-Buffer aktivieren
-//		glEnable(GL_CULL_FACE); // backface culling aktivieren
+		//glEnable(GL_CULL_FACE); // backface culling aktivieren
+		projectionMatrix  = new Matrix4();
+		int camloc = glGetUniformLocation(shaderProgram.getId(), "projectionMatrix");
+		glUniformMatrix4fv(camloc, false, projectionMatrix.getValuesAsArray());
 
+	}
+
+	protected void makeTetra() {
+
+		glUseProgram(shaderProgram.getId());
+		vaoId1 = glGenVertexArrays();
+		glBindVertexArray(vaoId1);
+
+		attachVBO(tVertices, 0, 3);
 	}
 
 	private void initializePyramid() {
@@ -68,6 +88,30 @@ public class Projekt extends AbstractOpenGLBase {
 		attachVBO( farben, 1, 3);
 	}
 
+	private void initializeCube() {
+		glUseProgram(shaderProgram.getId());
+
+		//Vertices
+		vaoId2 = glGenVertexArrays();
+		glBindVertexArray(vaoId2);
+
+		attachVBO(cube,0,3);
+		//Colors zum VAO hinzufügen
+		attachVBO( farben, 1, 3);
+	}
+
+	private void initializeGem() {
+		glUseProgram(shaderProgram.getId());
+
+		//Vertices
+		vaoId3 = glGenVertexArrays();
+		glBindVertexArray(vaoId3);
+
+		attachVBO(gem,0,3);
+		//Colors zum VAO hinzufügen
+		attachVBO( farben, 1, 3);
+	}
+
 	//Methode um VBO zum VAO hinzuzufügen
 	private void attachVBO (float[] array, int num, int vectype) {
 		int vboId = glGenBuffers();
@@ -77,8 +121,11 @@ public class Projekt extends AbstractOpenGLBase {
 		glEnableVertexAttribArray(num);
 	}
 
+
 	private void createArrays() {
 		// Koordinaten, VAO, VBO, ... hier anlegen und im Grafikspeicher ablegen
+
+		glUseProgram(shaderProgram.getId());
 
 		pyramid = new float[]{
 				//sides
@@ -106,6 +153,103 @@ public class Projekt extends AbstractOpenGLBase {
 				0.1f, -0.1f, 0.1f, 		// C
 				-0.1f, -0.1f, -0.1f		// A
 
+		};
+		cube = new float[]{
+
+				// Vorne L.Drei
+				-0.5f,  0.5f, -0.5f,  //C
+				-0.5f, -0.5f, -0.5f,  //A
+				0.5f, -0.5f, -0.5f,  //B
+
+				// Vorne R.Drei
+				0.5f, -0.5f, -0.5f,  //B
+				0.5f,  0.5f, -0.5f,  //D
+				-0.5f,  0.5f, -0.5f,  //C
+
+				// Rechts L.Drei
+				0.5f,  0.5f, -0.5f,  //D
+				0.5f, -0.5f, -0.5f,  //B
+				0.5f, -0.5f,  0.5f,  //E
+
+				// Rechts R.Drei
+				0.5f, -0.5f,  0.5f,  //E
+				0.5f,  0.5f,  0.5f,  //G
+				0.5f,  0.5f, -0.5f,  //D
+
+				// Hinten L.Drei
+				0.5f,  0.5f,  0.5f,  //G
+				0.5f, -0.5f,  0.5f,  //E
+				-0.5f, -0.5f,  0.5f,  //F
+
+				// Hinten R.Drei
+				-0.5f, -0.5f,  0.5f,  //F
+				-0.5f,  0.5f,  0.5f,  //H
+				0.5f,  0.5f,  0.5f,  //G
+
+				// Links L.Drei
+				-0.5f,  0.5f,  0.5f,  //H
+				-0.5f, -0.5f,  0.5f,  //F
+				-0.5f, -0.5f, -0.5f,  //A
+
+				// Links R.Drei
+				-0.5f, -0.5f, -0.5f,  //A
+				-0.5f,  0.5f, -0.5f,  //C
+				-0.5f,  0.5f,  0.5f,  //H
+
+				// Boden L.Drei
+				0.5f, -0.5f, -0.5f,  //B
+				-0.5f, -0.5f, -0.5f,  //A
+				-0.5f, -0.5f,  0.5f,  //F
+
+				// Boden R.Drei
+				-0.5f, -0.5f,  0.5f,  //F
+				0.5f, -0.5f,  0.5f,  //E
+				0.5f, -0.5f, -0.5f,  //B
+
+				// Dach L.Drei
+				-0.5f,  0.5f,  0.5f,  //H
+				-0.5f,  0.5f, -0.5f,  //C
+				0.5f,  0.5f, -0.5f,  //D
+
+				// Dach R.Drei
+				0.5f,  0.5f, -0.5f,  //D
+				0.5f,  0.5f,  0.5f,  //G
+				-0.5f,  0.5f,  0.5f   //H
+
+		};
+		gem = new float[] {
+				// 1s triangle
+				0.0f, 0.4f, 0.0f,
+				-0.2f, 0.0f, -0.2f,
+				0.2f, 0.0f, -0.2f,
+				// 2nd triangle
+				0.0f, -0.4f, 0.0f,
+				-0.2f, 0.0f, -0.2f,
+				0.2f, 0.0f, -0.2f,
+				// 3rd triangle
+				0.0f, 0.4f, 0.0f,
+				0.2f, 0.0f, -0.2f,
+				0.2f, 0.0f, 0.2f,
+				// 4th triangle
+				0.0f, -0.4f, 0.0f,
+				0.2f, 0.0f, -0.2f,
+				0.2f, 0.0f, 0.2f,
+				// 5th triangle
+				0.0f, 0.4f, 0.0f,
+				0.2f, 0.0f, 0.2f,
+				-0.2f, 0.0f, 0.2f,
+				// 6th triangle
+				0.0f, -0.4f, 0.0f,
+				0.2f, 0.0f, 0.2f,
+				-0.2f, 0.0f, 0.2f,
+				// 7th triangle
+				0.0f, 0.4f, 0.0f,
+				-0.2f, 0.0f, 0.2f,
+				-0.2f, 0.0f, -0.2f,
+				// 8th triangle
+				0.0f, -0.4f, 0.0f,
+				-0.2f, 0.0f, 0.2f,
+				-0.2f, 0.0f, -0.2f,
 		};
 		farben = new float[]{
 				0.9f, 0.3f, 0f,	//color first vertex
@@ -136,9 +280,35 @@ public class Projekt extends AbstractOpenGLBase {
 
 	@Override
 	public void update() {
-		angle += 1.0f;
-		transformationMatrix = new Matrix4();
-		transformationMatrix.rotateY(angle).rotateX(angle);
+		angle += 1f;
+
+		//small
+		smallMatrix = new Matrix4();
+		smallMatrix.translate(-0.5f, -1f , 0f);
+		smallMatrix.rotateY(angle);
+		smallMatrix.scale(0.5f);
+
+		//medium
+		mediumMatrix = new Matrix4();
+		mediumMatrix.rotateY(angle).rotateZ(180f);
+		mediumMatrix.translate(-0.5f, 0.5f, 0f);
+
+		//large
+		bigMatrix = new Matrix4();
+		bigMatrix.translate(-0.3f, 0f, 0f);
+		bigMatrix.rotateY(angle);
+		bigMatrix.scale(1.5f);
+
+		//cube
+		cubeMatrix = new Matrix4();
+		cubeMatrix.rotateZ(angle).rotateY(angle);
+		cubeMatrix.scale(0.1f);
+		cubeMatrix.translate(0.5f, 0.5f, 0f);
+
+		//gem
+		gemMatrix = new Matrix4();
+		gemMatrix.rotateY(angle);
+
 	}
 
 	@Override
@@ -147,12 +317,31 @@ public class Projekt extends AbstractOpenGLBase {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Matrix an Shader übertragen
+
 		int loc = glGetUniformLocation(shaderProgram.getId(), "transformationMatrix");
-		glUniformMatrix4fv(loc, false, transformationMatrix.getValuesAsArray());
-		int loc2 = glGetUniformLocation(shaderProgram.getId(), "projectionMatrix");
-		glUniformMatrix4fv(loc2, false, transformationMatrix.getValuesAsArray());
-		// VAOs zeichnen
+		glBindVertexArray(vaoId1);
+		glUniformMatrix4fv(loc, false, smallMatrix.getValuesAsArray());
 		glDrawArrays(GL_TRIANGLES, 0, 18);
+		//mittel
+		glUniformMatrix4fv(loc, false, mediumMatrix.getValuesAsArray());
+		glDrawArrays(GL_TRIANGLES, 0, 18);
+		//groß
+		glUniformMatrix4fv(loc, false, bigMatrix.getValuesAsArray());
+		glDrawArrays(GL_TRIANGLES, 0, 18);
+		//klein pyramide
+
+
+		//cube
+		int loc2 = glGetUniformLocation(shaderProgram.getId(), "transformationMatrix");
+		glUniformMatrix4fv(loc2, false, cubeMatrix.getValuesAsArray());
+		glBindVertexArray(vaoId2);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		int loc3 = glGetUniformLocation(shaderProgram.getId(), "transformationMatrix");
+		glUniformMatrix4fv(loc3, false, gemMatrix.getValuesAsArray());
+		glBindVertexArray(vaoId3);
+		glDrawArrays(GL_TRIANGLES, 0, 24);
+
 	}
 
 	@Override
